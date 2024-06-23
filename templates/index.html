@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <title>Device Login</title>
+    <script>
+      function checkLoginStatus() {
+        fetch("/token")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              window.location.href = "/dashboard";
+            } else {
+              setTimeout(checkLoginStatus, 5000);
+            }
+          });
+      }
+
+      window.onload = function () {
+        checkLoginStatus();
+      };
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Device Login</h1>
+      <p>{{ message }}</p>
+      <p>Please complete the login process on another device or tab.</p>
+    </div>
+  </body>
+</html>
