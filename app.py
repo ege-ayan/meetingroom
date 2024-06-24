@@ -1,7 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, session, jsonify
+from flask import Flask, render_template, redirect, url_for, session, jsonify, request
 import msal
 import requests
 import json
+from datetime import datetime, date, time, timedelta
+from dateutil import parser
 from config import CLIENT_ID, CLIENT_SECRET, AUTHORITY, SCOPE, ENDPOINT
 
 app = Flask(__name__)
@@ -28,8 +30,8 @@ def token():
     else:
         return jsonify({'status': 'waiting'})
 
-@app.route('/dashboard')
-def dashboard():
+@app.route('/main_screen')
+def main_screen():
     access_token = session.get('access_token')
     if not access_token:
         return redirect(url_for('index'))
@@ -39,12 +41,94 @@ def dashboard():
         'Content-Type': 'application/json'
     }
 
-    response = requests.get(ENDPOINT, headers=headers)
+    # For debugging: set the date to 18/04/2024 and time to 9:41 AM
+    debug_date = datetime(2024, 6, 24, 9, 41)
+    now_date = datetime.now()
+
+    now = debug_date
+    current_time = now.isoformat()
+    today_start = datetime.combine(debug_date.date(), time.min).isoformat() + 'Z'
+    today_end = datetime.combine(debug_date.date(), time.max).isoformat() + 'Z'
+
+    response = requests.get(f"{ENDPOINT}?$filter=start/dateTime ge '{today_start}' and start/dateTime le '{today_end}'", headers=headers)
     if response.status_code == 200:
         events = response.json()
-        return render_template('dashboard.html', events=events)
+        room_available = True
+        for event in events['value']:
+            event_start = parser.parse(event['start']['dateTime'])
+            event_end = parser.parse(event['end']['dateTime'])
+            if event_start <= now <= event_end:
+                room_available = False
+                break
+        return render_template('main_screen.html', events=events['value'], room_available=room_available, current_time=current_time)
     else:
         return f"Error: {response.status_code} {response.json()}"
+
+@app.route('/event_details/<event_id>')
+def event_details(event_id):
+    access_token = session.get('access_token')
+    if not access_token:
+        return redirect(url_for('index'))
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.get(f"{ENDPOINT}/{event_id}", headers=headers)
+    if response.status_code == 200:
+        event = response.json()
+        return render_template('event_details.html', event=event)
+    else:
+        return f"Error: {response.status_code} {response.json()}"
+
+@app.route('/create_event', methods=['GET', 'POST'])
+def create_event():
+    access_token = session.get('access_token')
+    if not access_token:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        event_data = {
+            "subject": request.form['subject'],
+            "body": {
+                "contentType": "HTML",
+                "content": request.form['body']
+            },
+            "start": {
+                "dateTime": request.form['start'],
+                "timeZone": "UTC"
+            },
+            "end": {
+                "dateTime": request.form['end'],
+                "timeZone": "UTC"
+            },
+            "location": {
+                "displayName": request.form['location']
+            },
+            "attendees": [
+                {
+                    "emailAddress": {
+                        "address": request.form['attendee'],
+                        "name": request.form['attendee_name']
+                    },
+                    "type": "required"
+                }
+            ]
+        }
+
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(ENDPOINT, headers=headers, json=event_data)
+        if response.status_code == 201:
+            return redirect(url_for('main_screen'))
+        else:
+            return f"Error: {response.status_code} {response.json()}"
+
+    return render_template('create_event.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

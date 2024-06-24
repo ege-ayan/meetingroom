@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Main Screen</title>
+    <script>
+        function updateCurrentTime() {
+            const currentTimeElement = document.getElementById('current-time');
+            const now = new Date();
+            currentTimeElement.textContent = now.toLocaleTimeString();
+        }
+
+        setInterval(updateCurrentTime, 1000);
+    </script>
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Meeting Room Status</h1>
+            <div>
+                <p id="current-time">{{ current_time }}</p>
+                <a href="{{ url_for('create_event') }}" class="button">Create Event</a>
+            </div>
+        </div>
+        <p>Room is currently: <strong>{{ 'Available' if room_available else 'Occupied' }}</strong></p>
+        <h2>Today's Events</h2>
+        <ul>
+            {% for event in events %}
+                <li>
+                    <a href="{{ url_for('event_details', event_id=event['id']) }}">{{ event['subject'] }}</a> - {{ event['start']['dateTime'] }} to {{ event['end']['dateTime'] }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

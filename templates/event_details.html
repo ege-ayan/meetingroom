@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Event Details</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Event Details</h1>
+        <p><strong>Subject:</strong> {{ event['subject'] }}</p>
+        <p><strong>Start:</strong> {{ event['start']['dateTime'] }}</p>
+        <p><strong>End:</strong> {{ event['end']['dateTime'] }}</p>
+        <p><strong>Location:</strong> {{ event['location']['displayName'] }}</p>
+        <p><strong>Attendees:</strong></p>
+        <ul>
+            {% for attendee in event['attendees'] %}
+                <li>{{ attendee['emailAddress']['name'] }} ({{ attendee['emailAddress']['address'] }})</li>
+            {% endfor %}
+        </ul>
+        <p><a href="{{ url_for('main_screen') }}">Back to Main Screen</a></p>
+    </div>
+</body>
+</html>

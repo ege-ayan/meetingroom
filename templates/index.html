@@ -14,22 +14,33 @@
           .then((response) => response.json())
           .then((data) => {
             if (data.status === "success") {
-              window.location.href = "/dashboard";
+              window.location.href = "/main_screen";
             } else {
-              setTimeout(checkLoginStatus, 5000);
+              setTimeout(checkLoginStatus, 3000);
             }
           });
       }
 
+      function makeUrlClickable() {
+        const messageElement = document.getElementById("message");
+        const messageText = messageElement.textContent;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const updatedText = messageText.replace(urlRegex, (url) => {
+          return `<a href="${url}" target="_blank">${url}</a>`;
+        });
+        messageElement.innerHTML = updatedText;
+      }
+
       window.onload = function () {
         checkLoginStatus();
+        makeUrlClickable();
       };
     </script>
   </head>
   <body>
     <div class="container">
       <h1>Device Login</h1>
-      <p>{{ message }}</p>
+      <p id="message">{{ message }}</p>
       <p>Please complete the login process on another device or tab.</p>
     </div>
   </body>
