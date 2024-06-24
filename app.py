@@ -42,7 +42,7 @@ def main_screen():
     }
 
     # For debugging: set the date to 18/04/2024 and time to 9:41 AM
-    debug_date = datetime(2024, 6, 24, 9, 41)
+    debug_date = datetime(2024, 4, 18, 9, 41)
     now_date = datetime.now()
 
     now = debug_date
